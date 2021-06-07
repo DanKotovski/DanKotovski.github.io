@@ -29,8 +29,8 @@ class Boxes {
         this.height = height;
     }
     update() {
-        game.ctx.fillStyle = 'white';
-        game.ctx.fillRect(this.xpos, this.ypos, this.width, this.height);
+        // game.ctx.fillStyle = 'white';
+        // game.ctx.fillRect(this.xpos, this.ypos, this.width, this.height);
     }
 }
 
@@ -50,7 +50,9 @@ class HeartBoxes extends Boxes {
         game.ctx.clearRect(0,0, game.canvas.width, game.canvas.height);
     }
     isCollision(hitbox, heartbox) {
-        if (hitbox.xpos + hitbox.width >= heartbox.xpos) {
+        if (hitbox.xpos + hitbox.width > heartbox.xpos &&
+            hitbox.xpos < heartbox.xpos + heartbox.width &&
+            (hitbox.ypos + hitbox.height)*0.95 > heartbox.ypos) {
                 return true;
             }
     }
@@ -70,6 +72,7 @@ class Mushrooms extends HeartBoxes {
         this.alive = false;
         setTimeout(()=>{
             game.enemies.displayedEnem.splice( game.enemies.displayedEnem.indexOf(heartbox),1);
+            game.sprites.enemies.countDeathFrames = 0;
             super.inflictDamage();
         },450);
     }
@@ -85,6 +88,7 @@ let game = {
     },
     sprites: {
         player: {
+            heart: null,
             adventurer: null,
             staggerFrames:10,
             gameFrame: 0,
@@ -151,6 +155,8 @@ let game = {
         }
     },
     player: {
+        playerLives: 3,
+        displayedLives: [],
         actionDelay: {
             jump: true,
             attack: true
@@ -179,7 +185,7 @@ let game = {
         attack() {
             this.actionDelay.attack = false;
             this.hitBox = new HitBoxes(this.heartBox.xpos + this.heartBox.width, this.heartBox.ypos, 
-                this.heartBox.width/2, this.heartBox.height);
+                this.heartBox.width/1.5, this.heartBox.height);
             setTimeout(()=>{
             this.hitBox.update();
             game.enemies.displayedEnem.forEach(enemy => {
@@ -192,6 +198,9 @@ let game = {
                 this.actionDelay.attack = true;
                 game.sprites.player.actionMap.countAttackFrames = 0;
             },600);
+        },
+        takeDamage() {
+            this.displayedLives.pop();
         }
     },
     enemies: {
@@ -215,20 +224,20 @@ let game = {
         this.preloadPlayer();
         this.preloadEnemies();
         this.parallax.createLayers();
-        this.player.heartBox = new HeartBoxes(Math.floor(game.canvas.width*0.1), Math.floor((game.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 1.32), Math.floor(this.canvas.height * 0.09));
+        this.player.heartBox = new HeartBoxes(Math.floor(this.canvas.width*0.1), Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 1.32), Math.floor(this.canvas.height * 0.09));
         this.spawnEnemies();
         window.addEventListener('keyup', e => {
             if (e.keyCode == '32' && this.player.actionDelay.jump) {
-                game.player.jump();
+                this.player.jump();
             } 
             if (e.keyCode == '65' && this.player.actionDelay.jump && this.player.actionDelay.attack) {
-                game.player.attack();
+                this.player.attack();
             }
         });
     },
     spawnEnemies() {
         setInterval(()=>{
-            this.enemies.displayedEnem.push(new Mushrooms(Math.floor(game.canvas.width), Math.floor((game.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 0.61), Math.floor(this.canvas.height * 0.09)));
+            this.enemies.displayedEnem.push(new Mushrooms(Math.floor(this.canvas.width), Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 0.61), Math.floor(this.canvas.height * 0.09)));
         },2000);
     },
     renderEnemies() {
@@ -237,26 +246,27 @@ let game = {
                 let position =  Math.floor(this.sprites.enemies.countIdleFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.idleFrames;
                 let frameX = 22.5 * position;
                 let frameY = 0;
-                game.ctx.drawImage(game.sprites.enemies.mushroom.idle, frameX, frameY,
+                this.ctx.drawImage(this.sprites.enemies.mushroom.idle, frameX, frameY,
                 22.5, 37, enemie.xpos, enemie.ypos, enemie.width, enemie.height);
             } else {
-                let position = Math.floor(game.sprites.enemies.countDeathFrames/game.sprites.enemies.staggerFrames) % game.sprites.enemies.idleFrames;
-                console.log(this.sprites.enemies.countDeathFrames);
+                let position = Math.floor(this.sprites.enemies.countDeathFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.idleFrames;
                 let frameX = 25 * position;
                 let frameY = 0;
-                game.ctx.drawImage(game.sprites.enemies.mushroom.death, frameX, frameY,
+                this.ctx.drawImage(this.sprites.enemies.mushroom.death, frameX, frameY,
                     23, 37, enemie.xpos, enemie.ypos, enemie.width, enemie.height);
-                game.sprites.enemies.countDeathFrames++;
+                this.sprites.enemies.countDeathFrames++;
             }
         });
-        if (this.sprites.enemies.countDeathFrames >= 27) {
-            this.sprites.enemies.countDeathFrames = 0;
-        }
         this.sprites.enemies.countIdleFrames++;
     },
     preloadPlayer() {
         this.sprites.player.adventurer = new Image();
         this.sprites.player.adventurer.src = 'img/adventurer/adventurer.png';
+        this.sprites.player.heart = new Image();
+        this.sprites.player.heart.src = 'img/heart.png';
+        for (let i = 1; i <= this.player.playerLives; i++) {
+            this.player.displayedLives.push(this.sprites.player.heart);
+        }
     },
     preloadEnemies() {
         for (let key in this.sprites.enemies) {
@@ -278,37 +288,59 @@ let game = {
             }
         }
     },
+    renderPlayerLives() {
+        let xpos = this.canvas.width * 0.1;
+        let ypos = this.canvas.height * 0.1;
+        this.player.displayedLives.forEach( item =>{
+            this.ctx.drawImage(item, xpos, ypos,  Math.floor((this.canvas.height * 0.06)*0.96), Math.floor(this.canvas.height * 0.06));
+            xpos += Math.floor(this.canvas.width * 0.05);
+        });
+        this.enemies.displayedEnem.forEach(enemy => {
+            if(enemy.isCollision(this.player.heartBox, enemy) && enemy.alive) {
+                this.player.takeDamage();
+                enemy.inflictDamage(enemy);
+                console.log('work');
+            }
+        });
+        if (this.player.displayedLives == false) {
+            alert('Вы проиграли');
+            location.reload();
+        }
+    },
     render() {
-        game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
-        game.parallax.animateParallax();
-        game.player.heartBox.update();
-        game.actionPlayerUpdate();
-        game.enemies.displayedEnem.forEach( enemie =>{
+        this.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+        this.parallax.animateParallax();
+        this.player.heartBox.update();
+        this.actionPlayerUpdate();
+        this.renderPlayerLives();
+        this.enemies.displayedEnem.forEach( enemie =>{
             enemie.update();
         });
-        game.renderEnemies();
-        requestAnimationFrame(game.render);
+        this.renderEnemies();
+        window.requestAnimationFrame(()=>{
+            this.render();
+        });
     },
     actionPlayerUpdate() {
         if (this.player.actionDelay.jump == false) {
             let position = Math.floor(this.sprites.player.actionMap.countJumpFrames/this.sprites.player.actionMap.staggerJumpFrames) % this.sprites.player.actionMap.jumpFrames;
-            let frameX = 50 * game.sprites.player.actionMap.jump[position].x;
-            let frameY = game.sprites.player.actionMap.jump[position].y * 37;
-            game.ctx.drawImage(game.sprites.player.adventurer, frameX, frameY,
+            let frameX = 50 * this.sprites.player.actionMap.jump[position].x;
+            let frameY = this.sprites.player.actionMap.jump[position].y * 37;
+            this.ctx.drawImage(game.sprites.player.adventurer, frameX, frameY,
                 50, 37, this.player.heartBox.xpos*0.8, this.player.heartBox.ypos*0.95, this.player.heartBox.width*1.5, this.player.heartBox.height*1.5);
             this.sprites.player.actionMap.countJumpFrames++;
         } else if (this.player.actionDelay.attack == false) {
             let position = Math.floor(this.sprites.player.actionMap.countAttackFrames/this.sprites.player.actionMap.staggerAttackFrames) % this.sprites.player.actionMap.attackFrames;
             let frameX = 50 * game.sprites.player.actionMap.attack[position].x;
             let frameY = game.sprites.player.actionMap.attack[position].y * 37;
-            game.ctx.drawImage(game.sprites.player.adventurer, frameX, frameY,
+            this.ctx.drawImage(game.sprites.player.adventurer, frameX, frameY,
                 50, 37, this.player.heartBox.xpos*0.8, this.player.heartBox.ypos*0.95, this.player.heartBox.width*1.5, this.player.heartBox.height*1.5);
             this.sprites.player.actionMap.countAttackFrames++;
         } else {
             let position = Math.floor(this.sprites.player.gameFrame/this.sprites.player.staggerFrames) % this.sprites.player.actionMap.runFrames;
-            let frameX = 50 * game.sprites.player.actionMap.run[position].x;
+            let frameX = 50 * this.sprites.player.actionMap.run[position].x;
             let frameY = this.sprites.player.actionMap.run[position].y * 37;
-            game.ctx.drawImage(this.sprites.player.adventurer, frameX, frameY,
+            this.ctx.drawImage(this.sprites.player.adventurer, frameX, frameY,
                 50, 37, this.player.heartBox.xpos*0.8, this.player.heartBox.ypos*0.95, this.player.heartBox.width*1.5, this.player.heartBox.height*1.5);
             this.sprites.player.gameFrame++;
         }
@@ -325,7 +357,7 @@ let game = {
             }
         },
         animateParallax(){
-            game.parallax.parallaxLayers.forEach(layer => {
+            this.parallaxLayers.forEach(layer => {
                 layer.update();
                 layer.draw();
             });
