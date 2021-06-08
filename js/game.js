@@ -51,8 +51,8 @@ class HeartBoxes extends Boxes {
     }
     isCollision(hitbox, heartbox) {
         if (hitbox.xpos + hitbox.width > heartbox.xpos &&
-            hitbox.xpos < heartbox.xpos + heartbox.width &&
-            (hitbox.ypos + hitbox.height)*0.95 > heartbox.ypos) {
+            hitbox.xpos < heartbox.xpos + (heartbox.width/3) &&
+            hitbox.ypos + hitbox.height > heartbox.ypos) {
                 return true;
             }
     }
@@ -70,6 +70,7 @@ class Mushrooms extends HeartBoxes {
     }
     inflictDamage(heartbox) {
         this.alive = false;
+        game.player.playerScore += 1;
         setTimeout(()=>{
             game.enemies.displayedEnem.splice( game.enemies.displayedEnem.indexOf(heartbox),1);
             game.sprites.enemies.countDeathFrames = 0;
@@ -88,6 +89,9 @@ let game = {
     },
     sprites: {
         player: {
+            referenceKey: ['A','Space'],
+            playerActions: ['attack', 'jump'],
+            spriteKey: [],
             heart: null,
             adventurer: null,
             staggerFrames:10,
@@ -155,6 +159,7 @@ let game = {
         }
     },
     player: {
+        playerScore: 0,
         playerLives: 3,
         displayedLives: [],
         actionDelay: {
@@ -263,7 +268,11 @@ let game = {
         this.sprites.player.adventurer = new Image();
         this.sprites.player.adventurer.src = 'img/adventurer/adventurer.png';
         this.sprites.player.heart = new Image();
-        this.sprites.player.heart.src = 'img/heart.png';
+        this.sprites.player.heart.src = 'img/referenceBar/heart.png';
+        for (let i = 0; i < this.sprites.player.referenceKey.length; i++) {
+            this.sprites.player.spriteKey.push(new Image());
+            this.sprites.player.spriteKey[i].src = `img/referenceBar/${this.sprites.player.referenceKey[i]}-Key.png`;
+        }
         for (let i = 1; i <= this.player.playerLives; i++) {
             this.player.displayedLives.push(this.sprites.player.heart);
         }
@@ -289,8 +298,8 @@ let game = {
         }
     },
     renderPlayerLives() {
-        let xpos = this.canvas.width * 0.1;
-        let ypos = this.canvas.height * 0.1;
+        let xpos = this.canvas.width * 0.05;
+        let ypos = this.canvas.height * 0.05;
         this.player.displayedLives.forEach( item =>{
             this.ctx.drawImage(item, xpos, ypos,  Math.floor((this.canvas.height * 0.06)*0.96), Math.floor(this.canvas.height * 0.06));
             xpos += Math.floor(this.canvas.width * 0.05);
@@ -299,20 +308,53 @@ let game = {
             if(enemy.isCollision(this.player.heartBox, enemy) && enemy.alive) {
                 this.player.takeDamage();
                 enemy.inflictDamage(enemy);
-                console.log('work');
             }
         });
-        if (this.player.displayedLives == false) {
-            alert('Вы проиграли');
-            location.reload();
+    },
+    renderReferenceKey(){
+        let fontSize = 16;
+        let spriteWidth = 32;
+        let xpos = Math.floor(this.canvas.width*0.8);
+        let ypos = Math.floor(this.canvas.height*0.05);
+        this.sprites.player.spriteKey.forEach( (sprite, index) =>{
+            this.ctx.drawImage(sprite, 0, 0, spriteWidth, 32, xpos, ypos, Math.floor(this.canvas.height*0.04), Math.floor(this.canvas.height*0.04));
+            if(this.canvas.height <= 500) {
+                this.ctx.font = `${fontSize}px Silom-Bold`;
+            } else {
+                this.ctx.font = '32px Silom-Bold';
+            }
+            this.ctx.fillStyle = 'white';
+            this.ctx.textBaseline = 'hanging';
+            this.ctx.fillText(this.sprites.player.playerActions[index], Math.floor(((xpos*100)/80)*0.85), ypos);
+            ypos += ypos;
+            spriteWidth += 32;
+        });
+    },
+    renderPlayerScore(){
+        let fontSize = 64;
+        let tempScore = this.player.playerScore;
+        if (this.player.playerScore < 10) {
+            tempScore = '0' + tempScore;
         }
+        if (this.player.playerScore < 100) {
+            tempScore = '0' + tempScore;
+        }
+        this.ctx.font = `${fontSize}px Silom-Bold`;
+        this.ctx.fillStyle = 'white';
+        this.ctx.textBaseline = 'hanging';
+        this.ctx.fillText(tempScore, Math.floor((this.canvas.width/2)-(fontSize/2)), Math.floor(this.canvas.height*0.05));
+    },
+    renderReferenceBar(){
+        this.renderPlayerLives();
+        this.renderReferenceKey();
+        this.renderPlayerScore();
     },
     render() {
         this.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
         this.parallax.animateParallax();
         this.player.heartBox.update();
         this.actionPlayerUpdate();
-        this.renderPlayerLives();
+        this.renderReferenceBar();
         this.enemies.displayedEnem.forEach( enemie =>{
             enemie.update();
         });
@@ -366,3 +408,12 @@ let game = {
 };
 game.preload();
 game.render();
+/*
+Анимировать биение сердец
+Сделать стартовый экран: добавить кнопку PLAY 
+Сделать рефакторинг кода
+Добавить летающие глаза
+Добавить магическую стрелу для глаз
+Продумать механику босса
+Добавить музыку
+*/
