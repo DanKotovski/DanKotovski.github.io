@@ -63,6 +63,7 @@ class Mushrooms extends HeartBoxes {
         super(x, y, width, height);
         this.speed = game.gameSpeed + 2;
         this.alive = true;
+        this.type = 'mushroom';
     }
     update() {
         this.xpos = Math.floor(this.xpos - this.speed);
@@ -74,6 +75,28 @@ class Mushrooms extends HeartBoxes {
         setTimeout(()=>{
             game.enemies.displayedEnem.splice( game.enemies.displayedEnem.indexOf(heartbox),1);
             game.sprites.enemies.countDeathFrames = 0;
+            super.inflictDamage();
+        },450);
+    }
+}
+
+class FlyingEye extends HeartBoxes {
+    constructor(x, y, width, height) {
+        super(x, y, width, height);
+        this.speed = game.gameSpeed + 2;
+        this.alive = true;
+        this.type = 'eye';
+    }
+    update() {
+        this.xpos = Math.floor(this.xpos - this.speed);
+        super.update();
+    }
+    inflictDamage(heartbox) {
+        this.alive = false;
+        game.player.playerScore += 2;
+        setTimeout(()=>{
+            game.enemies.displayedEnem.splice( game.enemies.displayedEnem.indexOf(heartbox),1);
+            game.sprites.enemies.countEyeDeathFrames = 0;
             super.inflictDamage();
         },450);
     }
@@ -134,7 +157,10 @@ let game = {
         },
         enemies: {
             staggerFrames: 10,
-            idleFrames: 4,
+            mushroomIdleFrames: 4,
+            eyeIdleFrames: 8,
+            eyeDeathFrames:4,
+            countEyeDeathFrames:0,
             countIdleFrames: 0,
             countDeathFrames: 0,
             mushroom: {
@@ -242,24 +268,50 @@ let game = {
     },
     spawnEnemies() {
         setInterval(()=>{
-            this.enemies.displayedEnem.push(new Mushrooms(Math.floor(this.canvas.width), Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 0.61), Math.floor(this.canvas.height * 0.09)));
-        },2000);
+            let spawnChance = Math.random();
+            if (spawnChance > 0.33) {
+                this.enemies.displayedEnem.push(new Mushrooms(Math.floor(this.canvas.width), Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 0.61), Math.floor(this.canvas.height * 0.09)));
+            } else {
+                this.enemies.displayedEnem.push(new FlyingEye(Math.floor(this.canvas.width), Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 1.31), Math.floor(this.canvas.height * 0.09)));
+            }
+        },3000);
     },
     renderEnemies() {
         this.enemies.displayedEnem.forEach( enemie => {
             if (enemie.alive) {
-                let position =  Math.floor(this.sprites.enemies.countIdleFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.idleFrames;
-                let frameX = 22.5 * position;
-                let frameY = 0;
-                this.ctx.drawImage(this.sprites.enemies.mushroom.idle, frameX, frameY,
-                22.5, 37, enemie.xpos, enemie.ypos, enemie.width, enemie.height);
-            } else {
-                let position = Math.floor(this.sprites.enemies.countDeathFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.idleFrames;
-                let frameX = 25 * position;
-                let frameY = 0;
-                this.ctx.drawImage(this.sprites.enemies.mushroom.death, frameX, frameY,
-                    23, 37, enemie.xpos, enemie.ypos, enemie.width, enemie.height);
-                this.sprites.enemies.countDeathFrames++;
+                if (enemie.type == 'mushroom') {
+                    let position =  Math.floor(this.sprites.enemies.countIdleFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.mushroomIdleFrames;
+                    let frameX = 22.5 * position;
+                    let frameY = 0;
+                    this.ctx.drawImage(this.sprites.enemies.mushroom.idle, frameX, frameY,
+                    22.5, 37, enemie.xpos, enemie.ypos, enemie.width, enemie.height);
+                }
+                if (enemie.type == 'eye') {
+                    let position =  Math.floor(this.sprites.enemies.countIdleFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.eyeIdleFrames;
+                    let frameX = 42 * position;
+                    let frameY = 0;
+                    this.ctx.drawImage(this.sprites.enemies.flyingEye.flight, frameX, frameY,
+                    42, 32, enemie.xpos, enemie.ypos, enemie.width, enemie.height);
+                }
+                
+            } 
+            if (enemie.alive == false){
+                if (enemie.type == 'mushroom') {
+                    let position = Math.floor(this.sprites.enemies.countDeathFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.mushroomIdleFrames;
+                    let frameX = 25 * position;
+                    let frameY = 0;
+                    this.ctx.drawImage(this.sprites.enemies.mushroom.death, frameX, frameY,
+                        23, 37, enemie.xpos, enemie.ypos, enemie.width, enemie.height);
+                    this.sprites.enemies.countDeathFrames++;
+                }
+                if (enemie.type == 'eye') {
+                    let position = Math.floor(this.sprites.enemies.countEyeDeathFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.eyeDeathFrames;
+                    let frameX = ((this.sprites.enemies.eyeDeathFrames - 1) * 42) - (42 * position);
+                    let frameY = 0;
+                    this.ctx.drawImage(this.sprites.enemies.flyingEye.death, frameX, frameY,
+                        42, 32, enemie.xpos, enemie.ypos, enemie.width, enemie.height);
+                    this.sprites.enemies.countEyeDeathFrames++;
+                }
             }
         });
         this.sprites.enemies.countIdleFrames++;
@@ -408,12 +460,3 @@ let game = {
 };
 game.preload();
 game.render();
-/*
-Анимировать биение сердец
-Сделать стартовый экран: добавить кнопку PLAY 
-Сделать рефакторинг кода
-Добавить летающие глаза
-Добавить магическую стрелу для глаз
-Продумать механику босса
-Добавить музыку
-*/
