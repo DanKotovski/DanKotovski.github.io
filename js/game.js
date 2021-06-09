@@ -165,12 +165,10 @@ let game = {
             countDeathFrames: 0,
             mushroom: {
                 idle: null,
-                takeHit: null,
                 death: null
             },
             flyingEye: {
                 flight: null,
-                takeHit: null,
                 death: null,
                 attack: null
             }
@@ -183,6 +181,9 @@ let game = {
                 third: null
             }
         }
+    },
+    sounds: {
+        mainTheme: null
     },
     player: {
         playerScore: 0,
@@ -254,6 +255,7 @@ let game = {
         this.preloadSpells();
         this.preloadPlayer();
         this.preloadEnemies();
+        this.preloadSounds();
         this.parallax.createLayers();
         this.player.heartBox = new HeartBoxes(Math.floor(this.canvas.width*0.1), Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 1.32), Math.floor(this.canvas.height * 0.09));
         this.spawnEnemies();
@@ -349,6 +351,12 @@ let game = {
             }
         }
     },
+    preloadSounds(){
+        for (let key in this.sounds) {
+            this.sounds[key] = new Audio();
+            this.sounds[key].src = `sounds/${key}.mp3`;
+        }
+    },
     renderPlayerLives() {
         let xpos = this.canvas.width * 0.05;
         let ypos = this.canvas.height * 0.05;
@@ -394,7 +402,7 @@ let game = {
         this.ctx.font = `${fontSize}px Silom-Bold`;
         this.ctx.fillStyle = 'white';
         this.ctx.textBaseline = 'hanging';
-        this.ctx.fillText(tempScore, Math.floor((this.canvas.width/2)-(fontSize/2)), Math.floor(this.canvas.height*0.05));
+        this.ctx.fillText(tempScore, Math.floor((this.canvas.width/2)-(this.ctx.measureText(tempScore).width/2)), Math.floor(this.canvas.height*0.05));
     },
     renderReferenceBar(){
         this.renderPlayerLives();
@@ -411,9 +419,19 @@ let game = {
             enemie.update();
         });
         this.renderEnemies();
-        window.requestAnimationFrame(()=>{
-            this.render();
-        });
+        if (this.player.displayedLives == false) {
+            this.ctx.font ='100px Silom-Bold';
+            this.ctx.fillStyle = 'red';
+            this.ctx.textBaseline = 'hanging';
+            this.ctx.fillText('Game Over', Math.floor((this.canvas.width/2) - (this.ctx.measureText('Game Over').width/2)), Math.floor(this.canvas.height*0.5));
+            setTimeout(()=>{
+                location.reload();
+            },1000);
+        } else {
+            window.requestAnimationFrame(()=>{
+                this.render();
+            });
+        }
     },
     actionPlayerUpdate() {
         if (this.player.actionDelay.jump == false) {
@@ -460,3 +478,4 @@ let game = {
 };
 game.preload();
 game.render();
+
