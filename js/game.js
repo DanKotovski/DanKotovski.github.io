@@ -1,4 +1,7 @@
 'use strict';
+
+const startBtn = document.querySelector('.start-screen__button');
+const startScreen = document.querySelector('.start-screen');
 class BgLayers {
     constructor(image, speedModifier) {
         this.x = 0;
@@ -72,6 +75,7 @@ class Mushrooms extends HeartBoxes {
     inflictDamage(heartbox) {
         this.alive = false;
         game.player.playerScore += 1;
+        game.sounds.enemyDamage.play();
         setTimeout(()=>{
             game.enemies.displayedEnem.splice( game.enemies.displayedEnem.indexOf(heartbox),1);
             game.sprites.enemies.countDeathFrames = 0;
@@ -94,6 +98,7 @@ class FlyingEye extends HeartBoxes {
     inflictDamage(heartbox) {
         this.alive = false;
         game.player.playerScore += 2;
+        game.sounds.enemyDamage.play();
         setTimeout(()=>{
             game.enemies.displayedEnem.splice( game.enemies.displayedEnem.indexOf(heartbox),1);
             game.sprites.enemies.countEyeDeathFrames = 0;
@@ -183,7 +188,10 @@ let game = {
         }
     },
     sounds: {
-        mainTheme: null
+        mainTheme: null,
+        sword: null,
+        enemyDamage: null,
+        jump: null
     },
     player: {
         playerScore: 0,
@@ -196,6 +204,7 @@ let game = {
         jump() {
             this.actionDelay.jump = false;
             let startPoint = this.heartBox.ypos;
+            game.sounds.jump.play();
             let up = setInterval(()=>{
                 if(startPoint - this.heartBox.ypos <= Math.floor((game.canvas.height*0.088)*3)) {
                     this.heartBox.ypos -= Math.floor(((game.canvas.height*0.088)*3)/5);
@@ -220,6 +229,7 @@ let game = {
                 this.heartBox.width/1.5, this.heartBox.height);
             setTimeout(()=>{
             this.hitBox.update();
+            game.sounds.sword.play();
             game.enemies.displayedEnem.forEach(enemy => {
                 if (enemy.isCollision(this.hitBox, enemy) && this.heartBox.xpos + this.heartBox.width < enemy.xpos) {
                     enemy.inflictDamage(enemy);
@@ -426,7 +436,7 @@ let game = {
             this.ctx.fillText('Game Over', Math.floor((this.canvas.width/2) - (this.ctx.measureText('Game Over').width/2)), Math.floor(this.canvas.height*0.5));
             setTimeout(()=>{
                 location.reload();
-            },1000);
+            },500);
         } else {
             window.requestAnimationFrame(()=>{
                 this.render();
@@ -474,8 +484,16 @@ let game = {
                 layer.draw();
             });
         },
+    },
+    start() {
+        game.preload();
+        startBtn.addEventListener('click', ()=>{
+            startScreen.classList.toggle('start-screen_disabled');
+            this.sounds.mainTheme.play();
+            this.render();
+        });
     }
 };
-game.preload();
-game.render();
+game.start();
+
 
