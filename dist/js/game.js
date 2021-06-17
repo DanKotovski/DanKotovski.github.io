@@ -30,8 +30,8 @@ class Boxes {
         this.height = height;
     }
     update() {
-        game.ctx.fillStyle = 'white';
-        game.ctx.fillRect(this.xpos, this.ypos, this.width, this.height);
+        // game.ctx.fillStyle = 'white';
+        // game.ctx.fillRect(this.xpos, this.ypos, this.width, this.height);
     }
 }
 
@@ -602,7 +602,6 @@ let game = {
             if (this.demon.attackDelay) {
                 let attackTime = Math.floor(Math.random() * 1000);
                 setTimeout(()=>{
-                    console.log(attackTime);
                     this.demon.attack();
                 }, attackTime);
             }
