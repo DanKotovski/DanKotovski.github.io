@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'Silom-Bold';
+    src:url('../fonts/Silom-Bold.ttf.woff') format('woff'),
+        url('../fonts/Silom-Bold.ttf.svg#Silom-Bold') format('svg'),
+        url('../fonts/Silom-Bold.ttf.eot'),
+        url('../fonts/Silom-Bold.ttf.eot?#iefix') format('embedded-opentype'); 
+    font-weight: normal;
+    font-style: normal;
+}
