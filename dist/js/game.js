@@ -18,7 +18,8 @@ class BgLayers {
     }
     draw() {
         game.ctx.drawImage(this.image, this.x, this.y, Math.floor(window.innerHeight * 1.17), window.innerHeight);
-        game.ctx.drawImage(this.image, this.x + (Math.floor(window.innerHeight * 1.17)), this.y, Math.floor(window.innerHeight * 1.17), window.innerHeight);
+        game.ctx.drawImage(this.image, this.x + (Math.floor(window.innerHeight * 1.17)), this.y, 
+        Math.floor(window.innerHeight * 1.17), window.innerHeight);
     }
 }
 
@@ -181,14 +182,6 @@ let game = {
                 idle: null,
                 attack: null
             }
-        },
-        spells: {
-            magicArrows: {
-                value: 29,
-                first: null,
-                second: null,
-                third: null
-            }
         }
     },
     sounds: {
@@ -198,7 +191,9 @@ let game = {
         jump: null,
         bossTheme: null,
         heroDies: null,
-        heroHurt: null
+        heroHurt: null,
+        fire: null,
+        victory: null
     },
     player: {
         playerScore: 0,
@@ -210,25 +205,28 @@ let game = {
         },
         actionPlayerUpdate() {
             if (this.actionDelay.jump == false) {
-                let position = Math.floor(game.sprites.player.actionMap.countJumpFrames/game.sprites.player.actionMap.staggerJumpFrames) % game.sprites.player.actionMap.jumpFrames;
+                let position = Math.floor(game.sprites.player.actionMap.countJumpFrames/game.sprites.player.actionMap.staggerJumpFrames)%game.sprites.player.actionMap.jumpFrames;
                 let frameX = 50 * game.sprites.player.actionMap.jump[position].x;
                 let frameY = game.sprites.player.actionMap.jump[position].y * 37;
                 game.ctx.drawImage(game.sprites.player.adventurer, frameX, frameY,
-                    50, 37, this.heartBox.xpos*0.8, this.heartBox.ypos*0.95, this.heartBox.width*1.5, this.heartBox.height*1.5);
+                    50, 37, this.heartBox.xpos*0.8, this.heartBox.ypos*0.95, 
+                    this.heartBox.width*1.5, this.heartBox.height*1.5);
                 game.sprites.player.actionMap.countJumpFrames++;
             } else if (this.actionDelay.attack == false) {
-                let position = Math.floor(game.sprites.player.actionMap.countAttackFrames/game.sprites.player.actionMap.staggerAttackFrames) % game.sprites.player.actionMap.attackFrames;
+                let position = Math.floor(game.sprites.player.actionMap.countAttackFrames/game.sprites.player.actionMap.staggerAttackFrames)%game.sprites.player.actionMap.attackFrames;
                 let frameX = 50 * game.sprites.player.actionMap.attack[position].x;
                 let frameY = game.sprites.player.actionMap.attack[position].y * 37;
                 game.ctx.drawImage(game.sprites.player.adventurer, frameX, frameY,
-                    50, 37, this.heartBox.xpos*0.8, this.heartBox.ypos*0.95, this.heartBox.width*1.5, this.heartBox.height*1.5);
+                    50, 37, this.heartBox.xpos*0.8, this.heartBox.ypos*0.95, 
+                    this.heartBox.width*1.5, this.heartBox.height*1.5);
                 game.sprites.player.actionMap.countAttackFrames++;
             } else {
-                let position = Math.floor(game.sprites.player.gameFrame/game.sprites.player.staggerFrames) % game.sprites.player.actionMap.runFrames;
+                let position = Math.floor(game.sprites.player.gameFrame/game.sprites.player.staggerFrames)%game.sprites.player.actionMap.runFrames;
                 let frameX = 50 * game.sprites.player.actionMap.run[position].x;
                 let frameY = game.sprites.player.actionMap.run[position].y * 37;
                 game.ctx.drawImage(game.sprites.player.adventurer, frameX, frameY,
-                    50, 37, this.heartBox.xpos*0.8, this.heartBox.ypos*0.95, this.heartBox.width*1.5, this.heartBox.height*1.5);
+                    50, 37, this.heartBox.xpos*0.8, this.heartBox.ypos*0.95, 
+                    this.heartBox.width*1.5, this.heartBox.height*1.5);
                 game.sprites.player.gameFrame++;
             }
         },
@@ -296,10 +294,11 @@ let game = {
         idleFrames: 6,
         attackDelay: true,
         attackAction: false,
-        lives: 3,
+        lives: 5,
         spawn() {
             let targetXPos = Math.floor(game.canvas.width*0.7);
-            this.heartBox = new HeartBoxes(game.canvas.width, Math.floor((game.canvas.height*0.088)*7), Math.floor(game.canvas.height * 0.18 * 1.11 * 2), Math.floor(game.canvas.height * 0.18 * 2));
+            this.heartBox = new HeartBoxes(game.canvas.width, Math.floor((game.canvas.height*0.088)*7), 
+            Math.floor(game.canvas.height * 0.18 * 1.11 * 2), Math.floor(game.canvas.height * 0.18 * 2));
             let demonInterval = setInterval(()=>{
                 if (this.heartBox.xpos > targetXPos) {
                     this.heartBox.xpos -= game.canvas.width*0.05;
@@ -310,13 +309,14 @@ let game = {
         },
         render() {
             if (this.attackAction == true) {
-                let position =  Math.floor(this.countAttackFrames/game.sprites.enemies.staggerFrames) % this.attackFrames;
+                let position =  Math.floor(this.countAttackFrames/game.sprites.enemies.staggerFrames)%this.attackFrames;
                 let frameX = 240 * position;
                 let frameY = 0;
                 let xpos = Math.floor((this.heartBox.width*1.5) - (this.heartBox.width));
                 let ypos = Math.floor((this.heartBox.height*1.33) - (this.heartBox.height));
                 game.ctx.drawImage(game.sprites.enemies.demon.attack, frameX, frameY,
-                240, 192, this.heartBox.xpos - xpos, this.heartBox.ypos - ypos, Math.floor(this.heartBox.width*1.5), Math.floor(this.heartBox.height*1.33));
+                240, 192, this.heartBox.xpos - xpos, this.heartBox.ypos - ypos, Math.floor(this.heartBox.width*1.5), 
+                Math.floor(this.heartBox.height*1.33));
                 this.countAttackFrames ++;
             } else {
                 let position =  Math.floor(this.countIdleFrames/game.sprites.enemies.staggerFrames) % this.idleFrames;
@@ -337,7 +337,11 @@ let game = {
                     clearInterval(charge);
                     this.attackAction = true;
                     setTimeout(()=>{
-                        this.hitBox = new HitBoxes(Math.floor(game.canvas.width*0.1), Math.floor((game.canvas.height*0.088)*9.5), 
+                        game.sounds.fire.load();
+                        game.sounds.fire.volume = '0.2';
+                        game.sounds.fire.play();
+                        this.hitBox = new HitBoxes(Math.floor(game.canvas.width*0.1), 
+                        Math.floor((game.canvas.height*0.088)*9.5), 
                         Math.floor(game.canvas.height * 0.09 * 1.32), Math.floor(game.canvas.height * 0.09));
                         if (game.player.heartBox.ypos + game.player.heartBox.height >= this.hitBox.ypos) {
                             game.player.takeDamage();
@@ -360,9 +364,6 @@ let game = {
         },
         takeDamage(){
             this.lives --;
-            if (this.lives == 0) {
-                game.gameOver();
-            }
         }
     },
     parallax: {
@@ -397,12 +398,13 @@ let game = {
             layer.src = `img/Background layers/layer_${i}.png`;
             this.background.layers.push(layer);
         }
-        this.preloadSpells();
         this.preloadPlayer();
         this.preloadEnemies();
         this.preloadSounds();
         this.parallax.createLayers();
-        this.player.heartBox = new HeartBoxes(Math.floor(this.canvas.width*0.1), Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 1.32), Math.floor(this.canvas.height * 0.09));
+        this.player.heartBox = new HeartBoxes(Math.floor(this.canvas.width*0.1), 
+        Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 1.32), 
+        Math.floor(this.canvas.height * 0.09));
         this.spawnEnemies();
         window.addEventListener('keyup', e => {
             if (e.keyCode == '32' && this.player.actionDelay.jump) {
@@ -420,9 +422,13 @@ let game = {
             }
             let spawnChance = Math.random();
             if (spawnChance > 0.33) {
-                this.enemies.displayedEnem.push(new Mushrooms(Math.floor(this.canvas.width), Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 0.61), Math.floor(this.canvas.height * 0.09)));
+                this.enemies.displayedEnem.push(new Mushrooms(Math.floor(this.canvas.width), 
+                Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 0.61), 
+                Math.floor(this.canvas.height * 0.09)));
             } else {
-                this.enemies.displayedEnem.push(new FlyingEye(Math.floor(this.canvas.width), Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 1.31), Math.floor(this.canvas.height * 0.09)));
+                this.enemies.displayedEnem.push(new FlyingEye(Math.floor(this.canvas.width), 
+                Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 1.31), 
+                Math.floor(this.canvas.height * 0.09)));
             }
         },3000);
     },
@@ -444,18 +450,6 @@ let game = {
             for (let action in this.sprites.enemies[key]) {
                 this.sprites.enemies[key][action] = new Image();
                 this.sprites.enemies[key][action].src = `img/${key}/${action}.png`;
-            }
-        }
-    },
-    preloadSpells() {
-        for (let key in this.sprites.spells.magicArrows) {
-            if (key != 'value') {
-                this.sprites.spells.magicArrows[key] = [];
-                for (let i = 0; i <= this.sprites.spells.magicArrows.value; i++) {
-                    let spellSprite = new Image();
-                    spellSprite.src = `img/magicArrows/${key}/1_${i}.png`;
-                    this.sprites.spells.magicArrows[key].push(spellSprite);
-                }
             }
         }
     },
@@ -482,11 +476,26 @@ let game = {
         }
         if (this.player.displayedLives == false) {
             this.gameOver();
+        } else if (this.demon.lives == 0) {
+            this.victory();
         } else {
             window.requestAnimationFrame(()=>{
                 this.render();
             });
         }
+    },
+    victory() {
+        this.sounds.victory.load();
+        this.sounds.victory.volume = '0.3';
+        this.sounds.victory.play();
+        this.ctx.font ='100px Silom-Bold';
+        this.ctx.fillStyle = 'red';
+        this.ctx.textBaseline = 'hanging';
+        this.ctx.fillText('YOU WIN', Math.floor((this.canvas.width/2) - (this.ctx.measureText('Game Over').width/2)), 
+        Math.floor(this.canvas.height*0.5));
+        setTimeout(()=>{
+            location.reload();
+        },500);
     },
     gameOver(){
         this.sounds.heroDies.load();
@@ -495,7 +504,8 @@ let game = {
         this.ctx.font ='100px Silom-Bold';
         this.ctx.fillStyle = 'red';
         this.ctx.textBaseline = 'hanging';
-        this.ctx.fillText('Game Over', Math.floor((this.canvas.width/2) - (this.ctx.measureText('Game Over').width/2)), Math.floor(this.canvas.height*0.5));
+        this.ctx.fillText('Game Over', Math.floor((this.canvas.width/2) - (this.ctx.measureText('Game Over').width/2)), 
+        Math.floor(this.canvas.height*0.5));
         setTimeout(()=>{
             location.reload();
         },500);
@@ -504,14 +514,14 @@ let game = {
         this.enemies.displayedEnem.forEach( enemie => {
             if (enemie.alive) {
                 if (enemie.type == 'mushroom') {
-                    let position =  Math.floor(this.sprites.enemies.countIdleFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.mushroomIdleFrames;
+                    let position =  Math.floor(this.sprites.enemies.countIdleFrames/this.sprites.enemies.staggerFrames)%this.sprites.enemies.mushroomIdleFrames;
                     let frameX = 22.5 * position;
                     let frameY = 0;
                     this.ctx.drawImage(this.sprites.enemies.mushroom.idle, frameX, frameY,
                     22.5, 37, enemie.xpos, enemie.ypos, enemie.width, enemie.height);
                 }
                 if (enemie.type == 'eye') {
-                    let position =  Math.floor(this.sprites.enemies.countIdleFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.eyeIdleFrames;
+                    let position =  Math.floor(this.sprites.enemies.countIdleFrames/this.sprites.enemies.staggerFrames)%this.sprites.enemies.eyeIdleFrames;
                     let frameX = 42 * position;
                     let frameY = 0;
                     this.ctx.drawImage(this.sprites.enemies.flyingEye.flight, frameX, frameY,
@@ -521,7 +531,7 @@ let game = {
             } 
             if (enemie.alive == false){
                 if (enemie.type == 'mushroom') {
-                    let position = Math.floor(this.sprites.enemies.countDeathFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.mushroomIdleFrames;
+                    let position = Math.floor(this.sprites.enemies.countDeathFrames/this.sprites.enemies.staggerFrames)%this.sprites.enemies.mushroomIdleFrames;
                     let frameX = 25 * position;
                     let frameY = 0;
                     this.ctx.drawImage(this.sprites.enemies.mushroom.death, frameX, frameY,
@@ -529,7 +539,7 @@ let game = {
                     this.sprites.enemies.countDeathFrames++;
                 }
                 if (enemie.type == 'eye') {
-                    let position = Math.floor(this.sprites.enemies.countEyeDeathFrames/this.sprites.enemies.staggerFrames) % this.sprites.enemies.eyeDeathFrames;
+                    let position = Math.floor(this.sprites.enemies.countEyeDeathFrames/this.sprites.enemies.staggerFrames)%this.sprites.enemies.eyeDeathFrames;
                     let frameX = ((this.sprites.enemies.eyeDeathFrames - 1) * 42) - (42 * position);
                     let frameY = 0;
                     this.ctx.drawImage(this.sprites.enemies.flyingEye.death, frameX, frameY,
@@ -544,7 +554,8 @@ let game = {
         let xpos = this.canvas.width * 0.05;
         let ypos = this.canvas.height * 0.05;
         this.player.displayedLives.forEach( item =>{
-            this.ctx.drawImage(item, xpos, ypos,  Math.floor((this.canvas.height * 0.06)*0.96), Math.floor(this.canvas.height * 0.06));
+            this.ctx.drawImage(item, xpos, ypos,  Math.floor((this.canvas.height * 0.06)*0.96), 
+            Math.floor(this.canvas.height * 0.06));
             xpos += Math.floor(this.canvas.width * 0.05);
         });
         this.enemies.displayedEnem.forEach(enemy => {
@@ -560,7 +571,8 @@ let game = {
         let xpos = Math.floor(this.canvas.width*0.8);
         let ypos = Math.floor(this.canvas.height*0.05);
         this.sprites.player.spriteKey.forEach( (sprite, index) =>{
-            this.ctx.drawImage(sprite, 0, 0, spriteWidth, 32, xpos, ypos, Math.floor(this.canvas.height*0.04), Math.floor(this.canvas.height*0.04));
+            this.ctx.drawImage(sprite, 0, 0, spriteWidth, 32, xpos, ypos, Math.floor(this.canvas.height*0.04), 
+            Math.floor(this.canvas.height*0.04));
             if(this.canvas.height <= 500) {
                 this.ctx.font = `${fontSize}px Silom-Bold`;
             } else {
@@ -585,7 +597,8 @@ let game = {
         this.ctx.font = `${fontSize}px Silom-Bold`;
         this.ctx.fillStyle = 'white';
         this.ctx.textBaseline = 'hanging';
-        this.ctx.fillText(tempScore, Math.floor((this.canvas.width/2)-(this.ctx.measureText(tempScore).width/2)), Math.floor(this.canvas.height*0.05));
+        this.ctx.fillText(tempScore, Math.floor((this.canvas.width/2)-(this.ctx.measureText(tempScore).width/2)), 
+        Math.floor(this.canvas.height*0.05));
     },
     renderReferenceBar(){
         this.renderPlayerLives();
