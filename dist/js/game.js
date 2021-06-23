@@ -241,18 +241,22 @@ let game = {
             }
         },
         jump() {
-            this.actionDelay.jump = false;
-            let startPoint = this.heartBox.ypos;
-            game.sounds.jump.load();
-            game.sounds.jump.volume = '0.1';
-            game.sounds.jump.play();
-            let up = setInterval(()=>{
-                if(startPoint - this.heartBox.ypos <= Math.floor((game.canvas.height*0.088)*3)) {
-                    this.heartBox.ypos -= Math.floor(((game.canvas.height*0.088)*3)/5);
-                } 
-            },150);
-            setTimeout(()=> {
-                clearInterval(up);
+            const jumpSequence = new Promise((resolve, reject)=>{
+                this.actionDelay.jump = false;
+                let startPoint = this.heartBox.ypos;
+                game.sounds.jump.load();
+                game.sounds.jump.volume = '0.1';
+                game.sounds.jump.play();
+                let up = setInterval(()=>{
+                    if(game.sprites.player.actionMap.jump.countFrames <= 45) {
+                        this.heartBox.ypos -= Math.floor(((game.canvas.height*0.088)*3)/5);
+                    } else {
+                        clearInterval(up);
+                        resolve(startPoint);
+                    }
+                },150);
+            });
+            jumpSequence.then( startPoint =>{
                 let down = setInterval(()=>{
                     if(startPoint > this.heartBox.ypos) {
                         this.heartBox.ypos += Math.floor(((game.canvas.height*0.088)*3)/5);
@@ -262,7 +266,7 @@ let game = {
                         game.sprites.player.actionMap.jump.countFrames = 0;
                     }
                 },150);
-            },750);
+            });
         },
         scoring(enemyType) {
             switch(enemyType) {
@@ -367,14 +371,22 @@ let game = {
             }
         },
         attack() {
-            this.attackDelay = false;
-            let startPos = this.heartBox.xpos;
-            let charge = setInterval(()=>{
-                if (this.heartBox.xpos > game.player.heartBox.xpos + game.player.heartBox.width) {
-                    this.heartBox.xpos -= game.canvas.width*0.05;
-                } else {
-                    clearInterval(charge);
-                    this.attackAction = true;
+            const attackSequence = new Promise((resolve, reject)=>{
+                this.attackDelay = false;
+                let startPos = this.heartBox.xpos;
+                let charge = setInterval(()=>{
+                    if (this.heartBox.xpos > game.player.heartBox.xpos + game.player.heartBox.width) {
+                        this.heartBox.xpos -= game.canvas.width*0.05;
+                    } else {
+                        clearInterval(charge);
+                        this.attackAction = true;
+                        resolve(startPos);
+                    }
+                },150);
+            });
+            attackSequence.then( startPos =>{
+                return new Promise((resolve, reject)=>{
+                    startPos = startPos;
                     setTimeout(()=>{
                         game.sounds.fire.load();
                         game.sounds.fire.volume = '0.2';
@@ -385,21 +397,23 @@ let game = {
                         if (game.player.heartBox.ypos + game.player.heartBox.height >= this.hitBox.ypos) {
                             game.player.takeDamage();
                         }
-                        setTimeout(()=>{
-                            game.sprites.enemies.demon.attack.countFrames = 0;
-                            this.attackAction = false;
-                            let backMove = setInterval(()=>{
-                                if (this.heartBox.xpos < startPos) {
-                                    this.heartBox.xpos += game.canvas.width*0.05;
-                                } else {
-                                    clearInterval(backMove);
-                                    this.attackDelay = true;
-                                }
-                            },150);
-                        },450);
+                        resolve(startPos);
                     },1150);
-                }
-            },150);
+                });
+            }).then( startPos =>{
+                setTimeout(()=>{
+                    game.sprites.enemies.demon.attack.countFrames = 0;
+                    this.attackAction = false;
+                    let backMove = setInterval(()=>{
+                        if (this.heartBox.xpos < startPos) {
+                            this.heartBox.xpos += game.canvas.width*0.05;
+                        } else {
+                            clearInterval(backMove);
+                            this.attackDelay = true;
+                        }
+                    },150);
+                },450);
+            });
         },
         takeDamage(){
             this.lives --;
@@ -648,7 +662,7 @@ let game = {
             this.render();
             setTimeout(()=>{
                 this.bossFight();
-            },4000);
+            },60000);
         });
     }
 };
