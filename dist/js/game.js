@@ -2,6 +2,8 @@
 
 const startBtn = document.querySelector('.start-screen__button');
 const startScreen = document.querySelector('.start-screen');
+const parallax = document.querySelector('.scene');
+const body = document.querySelector('body');
 class BgLayers {
     constructor(image, speedModifier) {
         this.x = 0;
@@ -334,6 +336,51 @@ let game = {
                 game.sprites.enemies[enemyType][actionType].countFrames++;
             }
         },
+        renderEnemies() {
+            this.displayedEnem.forEach( enemy => {
+                switch(enemy.alive) {
+                    case true:
+                        switch(enemy.type){
+                            case 'mushroom':
+                                this.animateEnemy(enemy, enemy.type, 'idle', 22.5, 37);
+                                break;
+                            case 'flyingEye':
+                                this.animateEnemy(enemy, enemy.type, 'flight', 42, 32);
+                                break;
+                        }
+                        break;
+                    case false:
+                        switch(enemy.type){
+                            case 'mushroom':
+                                this.animateEnemy(enemy, enemy.type, 'death', 25, 37);
+                                break;
+                            case 'flyingEye':
+                                this.animateEnemy(enemy, enemy.type, 'death', 42, 32);
+                                break;
+                        }
+                        break;
+                }
+            });
+            game.sprites.enemies.mushroom.idle.countFrames++;
+            game.sprites.enemies.flyingEye.flight.countFrames++;
+        },
+        spawnEnemies() {
+            let spawnInterval = setInterval(()=>{
+                if (game.demon.bossFight) {
+                    clearInterval(spawnInterval);
+                }
+                let spawnChance = Math.random();
+                if (spawnChance > 0.33) {
+                    this.displayedEnem.push(new Mushrooms(Math.floor(game.canvas.width), 
+                    Math.floor((game.canvas.height*0.088)*9.5), Math.floor(game.canvas.height * 0.09 * 0.61), 
+                    Math.floor(game.canvas.height * 0.09)));
+                } else {
+                    this.displayedEnem.push(new FlyingEye(Math.floor(game.canvas.width), 
+                    Math.floor((game.canvas.height*0.088)*9.5), Math.floor(game.canvas.height * 0.09 * 1.31), 
+                    Math.floor(game.canvas.height * 0.09)));
+                }
+            },3000);
+        }
     },
     demon: {
         bossFight: false,
@@ -475,23 +522,6 @@ let game = {
             }
         });
     },
-    spawnEnemies() {
-        let spawnInterval = setInterval(()=>{
-            if (this.demon.bossFight) {
-                clearInterval(spawnInterval);
-            }
-            let spawnChance = Math.random();
-            if (spawnChance > 0.33) {
-                this.enemies.displayedEnem.push(new Mushrooms(Math.floor(this.canvas.width), 
-                Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 0.61), 
-                Math.floor(this.canvas.height * 0.09)));
-            } else {
-                this.enemies.displayedEnem.push(new FlyingEye(Math.floor(this.canvas.width), 
-                Math.floor((this.canvas.height*0.088)*9.5), Math.floor(this.canvas.height * 0.09 * 1.31), 
-                Math.floor(this.canvas.height * 0.09)));
-            }
-        },3000);
-    },
     preloadPlayer() {
         this.sprites.player.adventurer = new Image();
         this.sprites.player.adventurer.src = 'img/adventurer/adventurer.png';
@@ -528,7 +558,7 @@ let game = {
         this.enemies.displayedEnem.forEach( enemie =>{
             enemie.update();
         });
-        this.renderEnemies();
+        this.enemies.renderEnemies();
         if (this.demon.bossFight) {
             this.demon.heartBox.update();
             this.demon.render();
@@ -553,34 +583,6 @@ let game = {
         setTimeout(()=>{
             location.reload();
         },5000);
-    },
-    renderEnemies() {
-        this.enemies.displayedEnem.forEach( enemy => {
-            switch(enemy.alive) {
-                case true:
-                    switch(enemy.type){
-                        case 'mushroom':
-                            this.enemies.animateEnemy(enemy, enemy.type, 'idle', 22.5, 37);
-                            break;
-                        case 'flyingEye':
-                            this.enemies.animateEnemy(enemy, enemy.type, 'flight', 42, 32);
-                            break;
-                    }
-                    break;
-                case false:
-                    switch(enemy.type){
-                        case 'mushroom':
-                            this.enemies.animateEnemy(enemy, enemy.type, 'death', 25, 37);
-                            break;
-                        case 'flyingEye':
-                            this.enemies.animateEnemy(enemy, enemy.type, 'death', 42, 32);
-                            break;
-                    }
-                    break;
-            }
-        });
-        this.sprites.enemies.mushroom.idle.countFrames++;
-        this.sprites.enemies.flyingEye.flight.countFrames++;
     },
     renderPlayerLives() {
         let xpos = this.canvas.width * 0.05;
@@ -656,9 +658,11 @@ let game = {
         this.preload();
         startBtn.addEventListener('click', ()=>{
             startScreen.classList.toggle('start-screen_disabled');
+            parallax.classList.toggle('scene_disabled');
+            body.style.backgroundImage = 'url("img/bg.png")';
             this.sounds.mainTheme.volume = '0.1';
             this.sounds.mainTheme.play();
-            this.spawnEnemies();
+            this.enemies.spawnEnemies();
             this.render();
             setTimeout(()=>{
                 this.bossFight();
